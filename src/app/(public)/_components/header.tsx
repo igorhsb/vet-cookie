@@ -16,7 +16,7 @@ import React from 'react';
 export function Header() {
     const [isOpen, setIsOpen] = useState(false);
 
-    const session = true;
+    const session = null;
 
     const navItems = [
         { href: '#professionals', label: 'Profissionais' },
@@ -30,13 +30,13 @@ export function Header() {
                     onClick={() => setIsOpen(false)}
                     key={item.href}
                     asChild
-                    className="bg-transparent hover:bg-transparent text-black shadow-none"
+                    className="bg-transparent hover:bg-transparent text-black shadow-none text-base"
                 >
                     <Link href={item.href}>{item.label}</Link>
                 </Button>
             ))}
             {session ? (
-                <Link href="/dashboard" className='flex items-center justify-center gap-2 text-black'>Painel da clinica</Link>
+                <Link href="/dashboard" className='flex items-center justify-center gap-2 bg-transparent hover:bg-transparent text-black shadow-none text-base font-bold'>Painel da clinica</Link>
             ) : (
                 <Button>
                     <LogIn /> Login
@@ -68,13 +68,12 @@ export function Header() {
                     </SheetTrigger>
                     <SheetContent
                         side="right"
-                        className="flex flex-col py-0.5 items-center w-[240px] sm:w-[300px] z-[9999]"
+                        className="flex flex-col items-center w-[240px] sm:w-[300px] z-[9999]"
                     >
                         <SheetTitle className="font-bold text-2xl">
                             Menu
                         </SheetTitle>
                         <SheetHeader></SheetHeader>
-                        <SheetDescription>Veja nossos links</SheetDescription>
 
                         <nav className="flex flex-col space-y-4 mt-6">
                             <NavLinks />
