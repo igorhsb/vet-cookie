@@ -1,7 +1,8 @@
+import { Header } from "./_components/header"
 export default function Home() {
   return(
     <div>
-      <h1>Vet Cookie</h1>
+      <Header />
     </div>
   )
 }
