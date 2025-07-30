@@ -9,7 +9,7 @@ import { ArrowRight } from 'lucide-react';
 
 export function ClinicsPanel() {
     return (
-        <section className="bg-amber-300 py-8">
+        <section className="bg-emerald-50 py-8">
             <div className="container mx-auto px-4 sm:px-6 lg:px-8">
                 <h2 className='text-3xl text-center mb-12 font-bold'>Clinicas disponíveis</h2>
             </div>

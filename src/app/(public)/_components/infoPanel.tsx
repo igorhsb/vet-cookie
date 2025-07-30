@@ -4,7 +4,7 @@ import doctorImage from "../../../../public/doctor-hero.png"
 
 export function InfoPanel() {
     return (
-        <section className="bg-green-50">
+        <section className="pb-2">
             <div className="container mx-auto px-4 sm:pb-0 pt-20 pb-3 sm:px-6 lg:px-8">
                 <main className="flex items-center justify-center">
                     <article className="space-y-8 max-w-3xl flex flex-col justify-center flex-[2]">
