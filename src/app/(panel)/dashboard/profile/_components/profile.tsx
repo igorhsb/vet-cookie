@@ -35,6 +35,7 @@ import { Button } from '@/components/ui/button';
 import { ArrowRight } from 'lucide-react';
 import { cn } from '@/lib/utils';
 import { Prisma } from '../../../../../../generated/prisma';
+import { updateProfile } from '../_actions/update-profile';
 
 
 type UserWithSubscription = Prisma.UserGetPayload<{
@@ -93,7 +94,17 @@ export function ProfileContent({user} : ProfileContentProps) {
             ...values,
             times: selectedHours
         }
-        console.log(profileData);
+        const response = await updateProfile(
+            {
+                name: values.name,
+                address: values.address,
+                status: values.status === 'active' ? true : false,
+                timeZone : values.timeZone,
+                times : selectedHours || [],
+                phone: values.phone
+            }
+        )
+        console.log(response);
     }
 
     return (
@@ -108,7 +119,7 @@ export function ProfileContent({user} : ProfileContentProps) {
                             <div className="flex justify-center">
                                 <div className="relative h-40 w-40 rounded-full overflow-hidden bg-gray-200">
                                     <Image
-                                        src={imgTest}
+                                        src={user.image ? user.image : imgTest}
                                         alt="Foto da clínica"
                                         fill
                                         className="object-cover"
