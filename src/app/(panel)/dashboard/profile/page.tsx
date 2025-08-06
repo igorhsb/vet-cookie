@@ -10,13 +10,13 @@ export default async function Profile() {
         redirect('/');
     }
     
-    const user = await getUserData({ userId : session?.user?.id})
+    const user = await getUserData({ userId : session?.user?.id});
 
     if (!user) {
         redirect('/');
     }
 
     return (
-        <ProfileContent />
+        <ProfileContent user={user}/>
     );
 }

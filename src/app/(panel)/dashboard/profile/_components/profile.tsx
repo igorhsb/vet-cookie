@@ -1,6 +1,6 @@
 'use client';
 import { useState } from 'react';
-import { useProfileForm } from './profile-form';
+import { ProfileFormData, useProfileForm } from './profile-form';
 import { Card, CardContent, CardHeader, CardTitle } from '@/components/ui/card';
 import {
     Form,
@@ -34,10 +34,29 @@ import {
 import { Button } from '@/components/ui/button';
 import { ArrowRight } from 'lucide-react';
 import { cn } from '@/lib/utils';
+import { Prisma } from '../../../../../../generated/prisma';
 
-export function ProfileContent() {
-    const form = useProfileForm();
-    const [selectedHours, setSelectedHours] = useState<string[]>([]);
+
+type UserWithSubscription = Prisma.UserGetPayload<{
+    include:{
+        subscription: true
+    }
+}>
+
+interface ProfileContentProps{
+    user : UserWithSubscription;
+}
+
+export function ProfileContent({user} : ProfileContentProps) {
+    const form = useProfileForm({
+        name : user.name,
+        address : user.address,
+        phone : user.address,
+        status : user.status,
+        timeZone: user.timezone
+    });
+
+    const [selectedHours, setSelectedHours] = useState<string[]>(user.times ?? []);
     const [diologIsOpen, setDiologIsOpen] = useState<boolean>(false);
 
     function generateTimeSlots(): string[] {
@@ -58,10 +77,29 @@ export function ProfileContent() {
         setSelectedHours((prev) => prev.includes(hour) ? prev.filter(h => h !== hour) : [...prev, hour].sort())
     }
 
+    const timeZones = Intl.supportedValuesOf("timeZone").filter((zone) => {
+        return zone.startsWith("America/Sao_Paulo") || 
+        zone.startsWith("America/Fortaleza") || 
+        zone.startsWith("America/Recife") || 
+        zone.startsWith("America/Bahia") || 
+        zone.startsWith("America/Belem") || 
+        zone.startsWith("America/Manaus") || 
+        zone.startsWith("America/Cuiaba") || 
+        zone.startsWith("America/Boa_Vista")
+    });
+
+    async function onSubmit(values:ProfileFormData) {
+        const profileData = {
+            ...values,
+            times: selectedHours
+        }
+        console.log(profileData);
+    }
+
     return (
         <div className="mx-auto">
             <Form {...form}>
-                <form>
+                <form onSubmit={form.handleSubmit(onSubmit)}>
                     <Card>
                         <CardHeader>
                             <CardTitle>Minha clínica</CardTitle>
@@ -206,13 +244,50 @@ export function ProfileContent() {
                                                     ))}
                                                 </div>
                                             </section>
-                                            <Button className='w-full bg-emerald-500' 
+                                            <Button className='w-full bg-emerald-500 hover:bg-emerald-800' 
                                             onClick={() => setDiologIsOpen(false)}>
                                                 Fechar modal
                                             </Button>
                                         </DialogContent>
                                     </Dialog>
                                 </div>
+                                <FormField
+                                    control={form.control}
+                                    name="timeZone"
+                                    render={({ field }) => (
+                                        <FormItem>
+                                            <FormLabel className="font-semibold">
+                                                Selecione o fuso horário
+                                            </FormLabel>
+                                            <FormControl>
+                                                <Select
+                                                    onValueChange={
+                                                        field.onChange
+                                                    }
+                                                    defaultValue={
+                                                        field.value
+                                                    }
+                                                >
+                                                    <SelectTrigger className='w-full'>
+                                                        <SelectValue placeholder="Selecione o seu fuso horário"></SelectValue>
+                                                    </SelectTrigger>
+                                                    <SelectContent className='w-full'>
+                                                        {timeZones.map((zone) => (
+                                                            <SelectItem key={zone} value={zone}>
+                                                                {zone}
+                                                            </SelectItem>
+                                                        ))}
+                                                    </SelectContent>
+                                                </Select>
+                                            </FormControl>
+                                            <FormMessage />
+                                        </FormItem>
+                                    )}
+                                />
+
+                                <Button type="submit" className='w-full bg-emerald-500 hover:bg-emerald-800'>
+                                    Salvar alterações
+                                </Button>
                             </div>
                         </CardContent>
                     </Card>
