@@ -36,37 +36,40 @@ import { ArrowRight } from 'lucide-react';
 import { cn } from '@/lib/utils';
 import { Prisma } from '../../../../../../generated/prisma';
 import { updateProfile } from '../_actions/update-profile';
-
+import { toast } from 'sonner';
+import {formatPhone} from '@/utils/formatPhone'
 
 type UserWithSubscription = Prisma.UserGetPayload<{
-    include:{
-        subscription: true
-    }
-}>
+    include: {
+        subscription: true;
+    };
+}>;
 
-interface ProfileContentProps{
-    user : UserWithSubscription;
+interface ProfileContentProps {
+    user: UserWithSubscription;
 }
 
-export function ProfileContent({user} : ProfileContentProps) {
+export function ProfileContent({ user }: ProfileContentProps) {
     const form = useProfileForm({
-        name : user.name,
-        address : user.address,
-        phone : user.address,
-        status : user.status,
-        timeZone: user.timezone
+        name: user.name,
+        address: user.address,
+        phone: user.phone,
+        status: user.status,
+        timeZone: user.timezone,
     });
 
-    const [selectedHours, setSelectedHours] = useState<string[]>(user.times ?? []);
+    const [selectedHours, setSelectedHours] = useState<string[]>(
+        user.times ?? []
+    );
     const [diologIsOpen, setDiologIsOpen] = useState<boolean>(false);
 
     function generateTimeSlots(): string[] {
         const hours: string[] = [];
         for (let i = 8; i <= 23; i++) {
             for (let j = 0; j < 2; j++) {
-                const hour = i.toString().padStart(2,"0");
-                const minutes = (j*30).toString().padStart(2,"0")
-                hours.push(`${hour}:${minutes}`)
+                const hour = i.toString().padStart(2, '0');
+                const minutes = (j * 30).toString().padStart(2, '0');
+                hours.push(`${hour}:${minutes}`);
             }
         }
         return hours;
@@ -74,37 +77,42 @@ export function ProfileContent({user} : ProfileContentProps) {
 
     const hours = generateTimeSlots();
 
-    function toggleHour(hour : string) {
-        setSelectedHours((prev) => prev.includes(hour) ? prev.filter(h => h !== hour) : [...prev, hour].sort())
+    function toggleHour(hour: string) {
+        setSelectedHours((prev) =>
+            prev.includes(hour)
+                ? prev.filter((h) => h !== hour)
+                : [...prev, hour].sort()
+        );
     }
 
-    const timeZones = Intl.supportedValuesOf("timeZone").filter((zone) => {
-        return zone.startsWith("America/Sao_Paulo") || 
-        zone.startsWith("America/Fortaleza") || 
-        zone.startsWith("America/Recife") || 
-        zone.startsWith("America/Bahia") || 
-        zone.startsWith("America/Belem") || 
-        zone.startsWith("America/Manaus") || 
-        zone.startsWith("America/Cuiaba") || 
-        zone.startsWith("America/Boa_Vista")
+    const timeZones = Intl.supportedValuesOf('timeZone').filter((zone) => {
+        return (
+            zone.startsWith('America/Sao_Paulo') ||
+            zone.startsWith('America/Fortaleza') ||
+            zone.startsWith('America/Recife') ||
+            zone.startsWith('America/Bahia') ||
+            zone.startsWith('America/Belem') ||
+            zone.startsWith('America/Manaus') ||
+            zone.startsWith('America/Cuiaba') ||
+            zone.startsWith('America/Boa_Vista')
+        );
     });
 
-    async function onSubmit(values:ProfileFormData) {
-        const profileData = {
-            ...values,
-            times: selectedHours
+    async function onSubmit(values: ProfileFormData) {
+        const response = await updateProfile({
+            name: values.name,
+            address: values.address,
+            status: values.status === 'active' ? true : false,
+            timeZone: values.timeZone,
+            times: selectedHours || [],
+            phone: values.phone,
+        });
+
+        if (response.error) {
+            toast.error(response.error);
+            return;
         }
-        const response = await updateProfile(
-            {
-                name: values.name,
-                address: values.address,
-                status: values.status === 'active' ? true : false,
-                timeZone : values.timeZone,
-                times : selectedHours || [],
-                phone: values.phone
-            }
-        )
-        console.log(response);
+        toast(response.data);
     }
 
     return (
@@ -175,6 +183,10 @@ export function ProfileContent({user} : ProfileContentProps) {
                                                 <Input
                                                     {...field}
                                                     placeholder="Digite o telefone"
+                                                    onChange={(e) => {
+                                                        const formattedPhone = formatPhone(e.target.value)
+                                                        field.onChange(formattedPhone)
+                                                    }}
                                                 />
                                             </FormControl>
                                             <FormMessage />
@@ -200,10 +212,10 @@ export function ProfileContent({user} : ProfileContentProps) {
                                                             : 'inactive'
                                                     }
                                                 >
-                                                    <SelectTrigger className='w-full'>
+                                                    <SelectTrigger className="w-full">
                                                         <SelectValue placeholder="Selecione o status da clínica"></SelectValue>
                                                     </SelectTrigger>
-                                                    <SelectContent className='w-full'>
+                                                    <SelectContent className="w-full">
                                                         <SelectItem value="active">
                                                             Ativo (Clínica
                                                             aberta)
@@ -223,12 +235,18 @@ export function ProfileContent({user} : ProfileContentProps) {
                                     <Label className="font-semibold">
                                         Configurar horários da clínica
                                     </Label>
-                                    <Dialog open={diologIsOpen} onOpenChange={setDiologIsOpen}>
+                                    <Dialog
+                                        open={diologIsOpen}
+                                        onOpenChange={setDiologIsOpen}
+                                    >
                                         <DialogTrigger asChild>
-                                            <Button variant="outline" className='w-full justify-between'>
+                                            <Button
+                                                variant="outline"
+                                                className="w-full justify-between"
+                                            >
                                                 Clique para selecionar horários
                                                 <ArrowRight></ArrowRight>
-                                            </Button>    
+                                            </Button>
                                         </DialogTrigger>
 
                                         <DialogContent>
@@ -237,26 +255,42 @@ export function ProfileContent({user} : ProfileContentProps) {
                                                     Horários da clínica
                                                 </DialogTitle>
                                                 <DialogDescription>
-                                                    Selecione os horários de funcionamento da clínica
+                                                    Selecione os horários de
+                                                    funcionamento da clínica
                                                 </DialogDescription>
                                             </DialogHeader>
-                                            <section className='py-4'>
-                                                <p className='mb-2 text-sm text-muted-foreground'>
-                                                    Clique nos horários abaixo para marcar ou desmarcar
+                                            <section className="py-4">
+                                                <p className="mb-2 text-sm text-muted-foreground">
+                                                    Clique nos horários abaixo
+                                                    para marcar ou desmarcar
                                                 </p>
-                                                <div className='grid grid-cols-5 gap-2'>
+                                                <div className="grid grid-cols-5 gap-2">
                                                     {hours.map((hour) => (
-                                                        <Button key={hour}
-                                                        variant="outline"
-                                                        className={cn('h-10', selectedHours.includes(hour) && 'border-2 border-emerald-500 text-primary')}
-                                                        onClick={() => toggleHour(hour)}>
+                                                        <Button
+                                                            key={hour}
+                                                            variant="outline"
+                                                            className={cn(
+                                                                'h-10',
+                                                                selectedHours.includes(
+                                                                    hour
+                                                                ) &&
+                                                                    'border-2 border-emerald-500 text-primary'
+                                                            )}
+                                                            onClick={() =>
+                                                                toggleHour(hour)
+                                                            }
+                                                        >
                                                             {hour}
                                                         </Button>
                                                     ))}
                                                 </div>
                                             </section>
-                                            <Button className='w-full bg-emerald-500 hover:bg-emerald-800' 
-                                            onClick={() => setDiologIsOpen(false)}>
+                                            <Button
+                                                className="w-full bg-emerald-500 hover:bg-emerald-800"
+                                                onClick={() =>
+                                                    setDiologIsOpen(false)
+                                                }
+                                            >
                                                 Fechar modal
                                             </Button>
                                         </DialogContent>
@@ -275,19 +309,22 @@ export function ProfileContent({user} : ProfileContentProps) {
                                                     onValueChange={
                                                         field.onChange
                                                     }
-                                                    defaultValue={
-                                                        field.value
-                                                    }
+                                                    defaultValue={field.value}
                                                 >
-                                                    <SelectTrigger className='w-full'>
+                                                    <SelectTrigger className="w-full">
                                                         <SelectValue placeholder="Selecione o seu fuso horário"></SelectValue>
                                                     </SelectTrigger>
-                                                    <SelectContent className='w-full'>
-                                                        {timeZones.map((zone) => (
-                                                            <SelectItem key={zone} value={zone}>
-                                                                {zone}
-                                                            </SelectItem>
-                                                        ))}
+                                                    <SelectContent className="w-full">
+                                                        {timeZones.map(
+                                                            (zone) => (
+                                                                <SelectItem
+                                                                    key={zone}
+                                                                    value={zone}
+                                                                >
+                                                                    {zone}
+                                                                </SelectItem>
+                                                            )
+                                                        )}
                                                     </SelectContent>
                                                 </Select>
                                             </FormControl>
@@ -296,7 +333,10 @@ export function ProfileContent({user} : ProfileContentProps) {
                                     )}
                                 />
 
-                                <Button type="submit" className='w-full bg-emerald-500 hover:bg-emerald-800'>
+                                <Button
+                                    type="submit"
+                                    className="w-full bg-emerald-500 hover:bg-emerald-800"
+                                >
                                     Salvar alterações
                                 </Button>
                             </div>
