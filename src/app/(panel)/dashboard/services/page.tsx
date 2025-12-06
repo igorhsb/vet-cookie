@@ -1,7 +1,9 @@
 import getSession from '@/lib/getSession';
 import { redirect } from 'next/navigation';
+import { ServiceContent } from './_components/service-content';
 
 export default async function Services() {
+    
     const session = await getSession();
 
     if (!session) {
@@ -9,8 +11,6 @@ export default async function Services() {
     }
 
     return (
-        <div>
-            <h1>Services</h1>
-        </div>
+        <ServiceContent userId={session.user?.id}/>
     );
 }
