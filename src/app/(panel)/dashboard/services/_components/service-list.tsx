@@ -25,6 +25,9 @@ import { Pencil, Plus, X } from "lucide-react"
 import { DialogService } from "./dialog-service"
 import { Service } from "../../../../../../generated/prisma"
 import { convertCentsToReal } from "@/utils/convertCurrency"
+import { deleteService } from "../_actions/delete-service"
+import { toast } from 'sonner';
+import { useRouter } from 'next/navigation';
 
 interface ServiceListProps {
     services: Service[]
@@ -33,6 +36,25 @@ interface ServiceListProps {
 export function ServiceList({services}: ServiceListProps) {
 
     const [isDialogOpen, setIsDialogOpen] = useState(false);
+    const [editingService, setEditingService] = useState<null | Service>(null);
+    const router = useRouter();
+
+    async function handleDeleteService(serviceId: string) {
+        const response = await deleteService({ serviceId: serviceId})
+
+        if (response.error) {
+            toast.error(response.error);  
+            return;
+        }
+
+        toast.success("Serviço deletado com sucesso!");
+        router.refresh();
+    }
+
+    async function handleEditService(service: Service) {
+        setEditingService(service)
+        setIsDialogOpen(true)
+    }
 
     return(
         <Dialog open={isDialogOpen} onOpenChange={setIsDialogOpen}>
@@ -48,10 +70,24 @@ export function ServiceList({services}: ServiceListProps) {
                             </Button>
                         </DialogTrigger>
 
-                        <DialogContent>
+                        <DialogContent
+                            onInteractOutside={(e) => {
+                                e.preventDefault();
+                                setIsDialogOpen(false);
+                                setEditingService(null);
+                            }}
+                        >
                             <DialogService
+                                serviceId={editingService ? editingService.id : undefined}
+                                initialValues={ editingService ? {
+                                    name: editingService.name,
+                                    price: (editingService.price/100).toFixed(2).replace(".",","),
+                                    hours: Math.floor(editingService.duration/60).toString(),
+                                    minutes: (editingService.duration % 60).toString()
+                                } : undefined}
                                 closeModal={() => {
-                                    setIsDialogOpen(false)
+                                    setIsDialogOpen(false);
+                                    setEditingService(null);
                                 }}
                             />
                         </DialogContent>
@@ -71,14 +107,14 @@ export function ServiceList({services}: ServiceListProps) {
                                         <Button
                                         variant="ghost"
                                         size="icon"
-                                        onClick={() => {}}
+                                        onClick={() => handleEditService(service)}
                                         >
                                             <Pencil className="w-4 h-4"/>
                                         </Button>
                                         <Button
                                         variant="ghost"
                                         size="icon"
-                                        onClick={() => {}}
+                                        onClick={() => handleDeleteService(service.id)}
                                         >
                                             <X className="w-4 h-4"/>
                                         </Button>
