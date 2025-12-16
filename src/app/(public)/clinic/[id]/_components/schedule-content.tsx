@@ -12,6 +12,7 @@ import { Input } from '@/components/ui/input';
 import { formatPhone } from '@/utils/formatPhone';
 import { DateTimePicker } from './date-picker';
 import "react-datepicker/dist/react-datepicker.css";
+import { Select, SelectContent, SelectItem, SelectTrigger, SelectValue } from '@/components/ui/select';
 
 type UserwithServiceAndSubscription = Prisma.UserGetPayload<{
     include: {
@@ -28,6 +29,11 @@ interface ScheduleContentProps {
 export function ScheduleContent({ clinic }:ScheduleContentProps) {
 
     const form = useAppointmentForm();
+    const {watch} = form;
+
+    async function handleRegister(formData:AppointmentFormData) {
+        
+    }
 
     return (
         <div className="min-h-screen flex flex-col">
@@ -55,7 +61,10 @@ export function ScheduleContent({ clinic }:ScheduleContentProps) {
             </section>
             <section className='max-w-3xl mx-auto w-full my-3'>
                 <Form {...form}>
-                <form className="mx-3 space-y-6 bg-white p-6 border rounded-md shadow-sm" action="">
+                <form 
+                className="mx-3 space-y-6 bg-white p-6 border rounded-md shadow-sm" action=""
+                onSubmit={form.handleSubmit(handleRegister)}
+                >
                     <FormField
                         control={form.control}
                         name="name"
@@ -132,6 +141,42 @@ export function ScheduleContent({ clinic }:ScheduleContentProps) {
                             </FormItem>
                         )}
                     />
+                    <FormField
+                        control={form.control}
+                        name="serviceId"
+                        render={({field}) => (
+                            <FormItem className='flex items-center gap-2 space-y-1'>
+                                <FormLabel > Selecione o serviço </FormLabel>
+                                <FormControl>
+                                    <Select 
+                                        onValueChange={field.onChange}
+                                    >
+                                        <SelectTrigger>
+                                            <SelectValue placeholder="Selecionar um serviço"/>
+                                        </SelectTrigger>
+                                        <SelectContent>
+                                            {clinic.services.map((service) => (
+                                                <SelectItem key={service.id} value={service.id}>
+                                                    {service.name} - {String(Math.floor(service.duration/60)).padStart(2,'0')}:{String(service.duration % 60).padStart(2,'0')}
+                                                </SelectItem>
+                                            ))}
+                                        </SelectContent>
+                                    </Select>
+                                </FormControl>
+                                <FormMessage/>
+                            </FormItem>
+                        )}
+                    />
+                    {clinic.status ? (
+                        <Button className='w-full bg-emerald-500 hover:bg-emerald-800'
+                        disabled={!form.watch("name") || !form.watch("email") || !form.watch("phone") || !form.watch("date") || !form.watch("serviceId")}
+                        >
+                            Realizar agendamento
+                        </Button>
+                    ):(
+                        <p className='bg-red-500 text-white text-center px-4 py-2 rounded-md'>A clínica está fechada neste momento</p>
+                    )}
+                    
                 </form>
             </Form>
             </section>
