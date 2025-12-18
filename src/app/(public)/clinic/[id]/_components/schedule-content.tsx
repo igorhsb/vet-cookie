@@ -14,6 +14,7 @@ import { formatPhone } from '@/utils/formatPhone';
 import { DateTimePicker } from './date-picker';
 import "react-datepicker/dist/react-datepicker.css";
 import { Select, SelectContent, SelectItem, SelectTrigger, SelectValue } from '@/components/ui/select';
+import { ScheduleTimeList } from './schedule-time-list';
 
 type UserwithServiceAndSubscription = Prisma.UserGetPayload<{
     include: {
@@ -27,9 +28,9 @@ interface ScheduleContentProps {
     clinic: UserwithServiceAndSubscription
 }
 
-interface TimeSlot {
+export interface TimeSlot {
     time: string;
-    availabnle: boolean;
+    available: boolean;
 }
 
 export function ScheduleContent({ clinic }:ScheduleContentProps) {
@@ -37,7 +38,7 @@ export function ScheduleContent({ clinic }:ScheduleContentProps) {
     const { watch } = form;
 
     const [selectedTime, setSelectedTime] = useState("");
-    const [availableTime, setAvailableTime] = useState<TimeSlot[]>([]);
+    const [availableTimeSlots, setAvailableTimeSlots] = useState<TimeSlot[]>([]);
     const [loadingSlots, setLoadingSlots] = useState(false);
     const selectedDate = watch("date")
     const selectedServiceId = watch("serviceId")
@@ -63,14 +64,14 @@ export function ScheduleContent({ clinic }:ScheduleContentProps) {
 
         if(selectedDate) {
             fetchBlockedTimes(selectedDate).then((blocked) => {
-                setBlockedTimes(blocked)
+                setBlockedTimes(blocked);
                 const times = clinic.times || [];
                 const finalSlots = times.map((time) => ({
                     time: time,
                     available: !blocked.includes(time)
                 }))
 
-                setAvailableTime(finalSlots)
+                setAvailableTimeSlots(finalSlots)
             })
         }
 
@@ -213,6 +214,33 @@ export function ScheduleContent({ clinic }:ScheduleContentProps) {
                             </FormItem>
                         )}
                     />
+                    {selectedServiceId && (
+                        <div className='space-y-2'>
+                            <Label className='font-semibold'>Horários disponíveis: </Label>
+                            <div className='bg-gray-100 p-4 rounded-lg'>
+                                {loadingSlots ? (
+                                    <p>Carregando horários...</p>
+                                ) : availableTimeSlots.length === 0 ? (
+                                    <p>Nenhum horário disponível</p>
+                                ) : (
+                                    <ScheduleTimeList 
+                                        onSelectTime={(time) => setSelectedTime(time)}
+                                        clinicTimes={clinic.times}
+                                        availableTimeSlots={availableTimeSlots}
+                                        selectedDate={selectedDate}
+                                        selectedTime={selectedTime}
+                                        blockedTimes={blockedTimes}
+                                        requiredSlots={
+                                            clinic.services.find(service => service.id === selectedServiceId) ? 
+                                            Math.ceil(clinic.services.find(service => service.id === selectedServiceId)!.duration / 30) : 
+                                            1
+                                        }
+                                    />
+                                )
+                                }
+                            </div>
+                        </div>
+                    )}
                     {clinic.status ? (
                         <Button className='w-full bg-emerald-500 hover:bg-emerald-800'
                         disabled={!form.watch("name") || !form.watch("email") || !form.watch("phone") || !form.watch("date") || !form.watch("serviceId")}
