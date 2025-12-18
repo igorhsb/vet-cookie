@@ -1,5 +1,6 @@
 'use client';
 
+import { useState, useCallback, useEffect } from 'react';
 import Image from 'next/image';
 import imgTest from '../../../../../../public/foto1.png';
 import { MapPin } from 'lucide-react';
@@ -26,11 +27,56 @@ interface ScheduleContentProps {
     clinic: UserwithServiceAndSubscription
 }
 
+interface TimeSlot {
+    time: string;
+    availabnle: boolean;
+}
+
 export function ScheduleContent({ clinic }:ScheduleContentProps) {
-
     const form = useAppointmentForm();
-    const {watch} = form;
+    const { watch } = form;
 
+    const [selectedTime, setSelectedTime] = useState("");
+    const [availableTime, setAvailableTime] = useState<TimeSlot[]>([]);
+    const [loadingSlots, setLoadingSlots] = useState(false);
+    const selectedDate = watch("date")
+    const selectedServiceId = watch("serviceId")
+
+    const [blockedTimes, setBlockedTimes] = useState<string[]>([]);
+
+    const fetchBlockedTimes = useCallback(async (date: Date): Promise<string[]> => {
+        setLoadingSlots(true);
+        try {
+            const dateString = date.toISOString().split("T")[0]
+            const response = await fetch(`${process.env.NEXT_PUBLIC_URL}/api/schedule/get-appointments?userId=${clinic.id}&date=${dateString}`)
+            const json = await response.json();
+            setLoadingSlots(false);
+            return json
+        } catch (err) {
+            console.log(err);
+            setLoadingSlots(false);
+            return [];
+        }
+    },[clinic.id]);
+
+    useEffect(() => {
+
+        if(selectedDate) {
+            fetchBlockedTimes(selectedDate).then((blocked) => {
+                setBlockedTimes(blocked)
+                const times = clinic.times || [];
+                const finalSlots = times.map((time) => ({
+                    time: time,
+                    available: !blocked.includes(time)
+                }))
+
+                setAvailableTime(finalSlots)
+            })
+        }
+
+    }, [clinic.times, fetchBlockedTimes, selectedTime, selectedDate, selectedServiceId ])
+
+    
     async function handleRegister(formData:AppointmentFormData) {
         
     }
