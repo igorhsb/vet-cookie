@@ -15,6 +15,8 @@ import { DateTimePicker } from './date-picker';
 import "react-datepicker/dist/react-datepicker.css";
 import { Select, SelectContent, SelectItem, SelectTrigger, SelectValue } from '@/components/ui/select';
 import { ScheduleTimeList } from './schedule-time-list';
+import { createNewAppointment } from '../_actions/create-appointment';
+import { toast } from 'sonner';
 
 type UserwithServiceAndSubscription = Prisma.UserGetPayload<{
     include: {
@@ -79,7 +81,34 @@ export function ScheduleContent({ clinic }:ScheduleContentProps) {
 
     
     async function handleRegister(formData:AppointmentFormData) {
-        
+        if(!selectedTime) {
+            return;
+        }
+
+        const appointmentData = {
+            ...formData,
+            time: selectedTime,
+            clinicId: clinic.id
+        }
+
+        const response = await createNewAppointment({
+            name: formData.name,
+            email: formData.email,
+            phone: formData.phone,
+            time: selectedTime,
+            serviceId: formData.serviceId,
+            clinicId: clinic.id,
+            date: formData.date
+        })
+
+        if(response.error) {
+            toast.error(response.error)
+            return;
+        }
+
+        toast.success("Consulta agendada!")
+        form.reset();
+        setSelectedTime("");
     }
 
     return (
