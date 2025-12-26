@@ -38,7 +38,7 @@ export function ServiceList({services}: ServiceListProps) {
     const [isDialogOpen, setIsDialogOpen] = useState(false);
     const [editingService, setEditingService] = useState<null | Service>(null);
     const router = useRouter();
-
+    
     async function handleDeleteService(serviceId: string) {
         const response = await deleteService({ serviceId: serviceId})
 

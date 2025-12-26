@@ -51,7 +51,6 @@ export async function GET(request: NextRequest) {
                 service: true
             }
         });
-
         const blockedSlots = new Set<string>();
 
         for (const apt of appointments) {
@@ -60,7 +59,7 @@ export async function GET(request: NextRequest) {
 
             if (startIndex !== -1) {
                 for (let i = 0; i < requiredSlots; i++) {
-                    const blockedSlot = user.times[startIndex + 1];
+                    const blockedSlot = user.times[startIndex + i];
                     if (blockedSlot) {
                         blockedSlots.add(blockedSlot)
                     }
@@ -69,6 +68,7 @@ export async function GET(request: NextRequest) {
         }
 
         const blockedTimes = Array.from(blockedSlots);
+        console.log("blockedTimes: ", blockedTimes);
         return NextResponse.json(blockedTimes)
 
     } catch (err) {

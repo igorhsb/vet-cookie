@@ -30,3 +30,26 @@ export function isToday(date: Date) {
         date.getDate() === now.getDate()
     )
 }
+
+export function isSlotSequenceAvailable(
+    startSlot: string,
+    requiredSlots: number,
+    allSlots: string[],
+    blockedSlots: string[]
+) {
+    
+    const startIndex = allSlots.indexOf(startSlot);
+    if(startIndex === -1 || startIndex + requiredSlots > allSlots.length) {
+        return false
+    }
+
+    for (let i = startIndex; i < startIndex; i++) {
+        const slotTime = allSlots[i];
+
+        if (blockedSlots.includes(slotTime)) {
+            return false;
+        }
+    }
+
+    return true;
+}

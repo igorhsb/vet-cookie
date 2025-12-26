@@ -66,6 +66,7 @@ export function ScheduleContent({ clinic }:ScheduleContentProps) {
 
         if(selectedDate) {
             fetchBlockedTimes(selectedDate).then((blocked) => {
+                console.log(blocked)
                 setBlockedTimes(blocked);
                 const times = clinic.times || [];
                 const finalSlots = times.map((time) => ({
