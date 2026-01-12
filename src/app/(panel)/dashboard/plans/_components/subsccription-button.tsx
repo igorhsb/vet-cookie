@@ -1,0 +1,38 @@
+"use client"
+
+import { Button } from "@/components/ui/button"
+import { Plan } from "../../../../../../generated/prisma"
+import { createSubscription } from "../_actions/create-subscription"
+import { toast } from "sonner"
+import { getStripe } from "@/utils/stripe-js"
+
+interface SubscriptionButtonProps {
+    type: Plan
+}
+
+export function SubscriptionButton({ type }: SubscriptionButtonProps) {
+
+    async function handleCCreateBilling() {
+        const {error, url} = await createSubscription({type: type});
+        
+        if (error) {
+            toast.error(error)
+            return;
+        }
+
+        const stripe = await getStripe();
+
+        if (stripe && url) {
+            window.location.href = url;
+        }
+    }
+
+    return(
+        <Button 
+            className={`w-full bg-black ${type === "PROFESSIONAL" && "bg-emerald-500 hover:bg-emerald-400"}`}
+            onClick={handleCCreateBilling}    
+        >
+            Ativar assinatura
+        </Button>
+    )
+}
